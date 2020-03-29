@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Hit.h"
 #include "Ray.h"
 #include "Vec3.h"
 
@@ -13,16 +14,10 @@ public:
   constexpr Sphere(const Vec3 &centre, double radius) noexcept
       : centre_(centre), radius_(radius) {}
 
-  constexpr const Vec3 &centre() const noexcept { return centre_; }
-  constexpr double radius() const noexcept { return radius_; }
+  [[nodiscard]] constexpr const Vec3 &centre() const noexcept { return centre_; }
+  [[nodiscard]] constexpr double radius() const noexcept { return radius_; }
 
-  struct Hit {
-    double distance{};
-    Vec3 position;
-    Vec3 normal;
-  };
-
-  std::optional<Hit> intersect(const Ray &ray) const noexcept {
+  [[nodiscard]] std::optional<Hit> intersect(const Ray &ray) const noexcept {
     // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
     auto op = centre_ - ray.origin();
     auto radiusSquared = radius_ * radius_;
@@ -41,6 +36,8 @@ public:
     auto t = minusT > epsilon ? minusT : plusT;
     auto hitPosition = ray.positionAlong(t);
     auto normal = (hitPosition - centre_).normalised();
+    if (normal.dot(ray.direction()) > 0)
+      normal = normal * -1;
     return Hit{t, hitPosition, normal};
   }
 };
